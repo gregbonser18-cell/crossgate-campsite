@@ -1,4 +1,4 @@
-const stripe = require('stripe')('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');
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -6,31 +6,33 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { amount, name, email } = JSON.parse(event.body);
+    const { amount, guests, checkIn, checkOut, name, email } = JSON.parse(event.body);
 
-    if (!amount || amount < 50) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'Invalid amount' }) };
-    }
-
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount),
-      currency: 'gbp',
-      receipt_email: email,
-      description: `Crossgate Campsite booking for ${name}`,
-      metadata: { guest_name: name, guest_email: email }
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'gbp',
+          product_data: {
+            name: `Crossgate Campsite — ${guests} guest(s)`,
+            description: `Check in: ${checkIn} | Check out: ${checkOut}`,
+          },
+          unit_amount: amount,
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      customer_email: email,
+      metadata: { name, email, checkIn, checkOut, guests },
+      success_url: `${process.env.URL}/booking-confirmed.html`,
+      cancel_url: `${process.env.URL}/#booking`,
     });
 
     return {
       statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientSecret: paymentIntent.client_secret })
+      body: JSON.stringify({ sessionId: session.id, url: session.url }),
     };
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
-      body: JSON.stringify({ error: err.message })
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
   }
 };
-
