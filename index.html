@@ -394,6 +394,39 @@
     .direction-text { font-size: 0.9rem; color: var(--text-light); }
     .direction-text strong { color: var(--text); }
 
+    /* ---- CONTACT ---- */
+    .contact { background: var(--forest); color: #fff; }
+    .contact h2 { color: #fff; }
+    .contact .lead { color: rgba(255,255,255,0.75); }
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 3rem; align-items: start;
+      margin-top: 3rem;
+    }
+    .contact-info { color: rgba(255,255,255,0.85); }
+    .contact-info h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem; margin-bottom: 1.2rem;
+    }
+    .form-group textarea {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #fff; border-radius: 10px;
+      padding: 0.75rem 1rem; font-size: 0.9rem;
+      font-family: 'Nunito', sans-serif;
+      transition: border-color 0.2s; resize: vertical; min-height: 130px;
+    }
+    .form-group textarea:focus { outline: none; border-color: var(--amber-light); }
+    .form-group textarea::placeholder { opacity: 0.5; }
+    .field-error { color: var(--amber-light); font-size: 0.78rem; min-height: 1em; }
+    .form-status {
+      margin-top: 1rem; text-align: center; font-size: 0.9rem;
+      border-radius: 12px; padding: 0.9rem 1rem; display: none;
+    }
+    .form-status.success { display: block; background: rgba(127,181,200,0.18); border: 1px solid rgba(127,181,200,0.5); }
+    .form-status.error { display: block; background: rgba(224,123,46,0.2); border: 1px solid rgba(224,123,46,0.5); }
+    .btn-book-form:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
     /* ---- REVIEWS ---- */
     .reviews { background: var(--warm-white); }
     .reviews-intro { text-align: center; margin-bottom: 3rem; }
@@ -482,6 +515,7 @@
       <li><a href="#pitches">Pitches</a></li>
       <li><a href="#gallery">Gallery</a></li>
       <li><a href="#location">Find Us</a></li>
+      <li><a href="#contact">Contact</a></li>
     </ul>
     <a href="#booking" class="nav-book">📅 Book Direct</a>
   </nav>
@@ -854,6 +888,71 @@
     </div>
   </section>
 
+  <!-- CONTACT -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <div style="text-align:center;max-width:640px;margin:0 auto;">
+        <span class="section-tag">Get in Touch</span>
+        <h2>Have a Question? Drop Us a Line</h2>
+        <p class="lead">Wondering about availability, bringing a dog, group bookings, or anything else? Send us a message and we'll get back to you — usually within a few hours.</p>
+      </div>
+      <div class="contact-grid">
+        <div class="booking-form">
+          <form id="contactForm" action="https://formspree.io/f/mdavzqvo" method="POST">
+            <div class="form-group">
+              <label for="contactName">YOUR NAME</label>
+              <input type="text" id="contactName" name="name" placeholder="e.g. Sarah Thompson" required />
+            </div>
+            <div class="form-group">
+              <label for="contactEmail">EMAIL ADDRESS</label>
+              <input type="email" id="contactEmail" name="email" placeholder="you@example.com" required />
+              <span class="field-error" id="contactEmailError"></span>
+            </div>
+            <div class="form-group">
+              <label for="contactPhone">PHONE (OPTIONAL)</label>
+              <input type="tel" id="contactPhone" name="phone" placeholder="07833 45066" />
+            </div>
+            <div class="form-group">
+              <label for="contactMessage">YOUR MESSAGE</label>
+              <textarea id="contactMessage" name="message" placeholder="Tell us a little about what you're after — dates, number of guests, any questions…" required></textarea>
+            </div>
+            <!-- Sets the email subject line in your Formspree inbox -->
+            <input type="hidden" name="_subject" value="New enquiry from Crossgate Campsite website" />
+            <button type="submit" class="btn-book-form" id="contactSubmit">✉️ Send Message</button>
+            <div class="form-status" id="contactStatus" role="status" aria-live="polite"></div>
+          </form>
+        </div>
+        <div class="contact-info">
+          <h3>Prefer to Talk?</h3>
+          <div class="info-item">
+            <div class="info-icon">📞</div>
+            <div class="info-text">
+              <h4>Call or Text</h4>
+              <p>07833 45066 — we're a real family, not a call centre.</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">✉️</div>
+            <div class="info-text">
+              <h4>Email Direct</h4>
+              <p>deb.cooper123@aol.com</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div class="info-text">
+              <h4>Find the Farm</h4>
+              <p>Tintwistle, SK13 1HP — right on the edge of the Longdendale Valley.</p>
+            </div>
+          </div>
+          <div class="direct-badge">
+            🌿 Ready to book? Head to <a href="#booking" style="color:var(--amber-light);font-weight:700;">Book Direct</a> to check availability and secure your pitch.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- REVIEWS -->
   <section class="reviews">
     <div class="container">
@@ -1164,6 +1263,60 @@ window.location.href = data.url;
         if (document.getElementById('youngRateLabel')) document.getElementById('youngRateLabel').textContent = isCash ? '£8' : '£10';
       }
     });
+  </script>
+
+  <!-- CONTACT FORM (Formspree AJAX submit) -->
+  <script>
+    // Progressive enhancement: the form posts to Formspree on its own if JS is
+    // disabled. With JS, submit via fetch so visitors stay on the page and see
+    // an inline confirmation.
+    (function () {
+      var form = document.getElementById('contactForm');
+      if (!form) return;
+      var status = document.getElementById('contactStatus');
+      var btn = document.getElementById('contactSubmit');
+      var emailErr = document.getElementById('contactEmailError');
+
+      form.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        emailErr.textContent = '';
+        status.className = 'form-status';
+        status.textContent = '';
+        btn.disabled = true;
+        var original = btn.textContent;
+        btn.textContent = 'Sending…';
+
+        try {
+          var res = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { Accept: 'application/json' }
+          });
+
+          if (res.ok) {
+            form.reset();
+            status.className = 'form-status success';
+            status.textContent = '✅ Thanks for getting in touch! We’ll reply as soon as we can.';
+          } else {
+            var data = await res.json().catch(function () { return {}; });
+            if (data && Array.isArray(data.errors) && data.errors.length) {
+              var emailIssue = data.errors.find(function (er) { return er.field === 'email'; });
+              if (emailIssue) emailErr.textContent = emailIssue.message;
+              status.className = 'form-status error';
+              status.textContent = '⚠️ Please check the highlighted fields and try again.';
+            } else {
+              throw new Error('Submission failed');
+            }
+          }
+        } catch (err) {
+          status.className = 'form-status error';
+          status.textContent = '⚠️ Something went wrong sending your message. Please call us on 07833 45066 or email deb.cooper123@aol.com.';
+        } finally {
+          btn.disabled = false;
+          btn.textContent = original;
+        }
+      });
+    })();
   </script>
 </body>
 </html>
