@@ -40,7 +40,9 @@ exports.handler = async (event) => {
       payment: 'online',
       status: 'pending'
     });
-    await fetch(`${process.env.APPS_SCRIPT_URL}?${params.toString()}`);
+   const sheetRes = await fetch(`${process.env.APPS_SCRIPT_URL}?${params.toString()}`);
+console.log('Sheet URL:', process.env.APPS_SCRIPT_URL);
+console.log('Sheet response:', sheetRes.status);
 
     return {
       statusCode: 200,
