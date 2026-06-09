@@ -40,10 +40,21 @@ exports.handler = async (event) => {
       payment: 'online',
       status: 'pending'
     });
-   const sheetRes = await fetch(`${process.env.APPS_SCRIPT_URL}?${params.toString()}`);
-console.log('Sheet URL:', process.env.APPS_SCRIPT_URL);
-console.log('Sheet response:', sheetRes.status);
-
+   await fetch('https://formspree.io/f/mdavzqvo', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    ref,
+    name,
+    email,
+    checkIn,
+    checkOut,
+    guests,
+    amount: '£' + (amount / 100).toFixed(2),
+    payment: 'online',
+    status: 'pending'
+  })
+});
     return {
       statusCode: 200,
       body: JSON.stringify({ sessionId: session.id, url: session.url }),
