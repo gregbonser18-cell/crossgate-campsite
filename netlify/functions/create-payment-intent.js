@@ -29,21 +29,18 @@ exports.handler = async (event) => {
 
     // Write booking to Google Sheet
     const ref = 'CG-' + Date.now();
-    await fetch(process.env.APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ref,
-        name,
-        email,
-        checkIn,
-        checkOut,
-        guests,
-        amount: '£' + (amount / 100).toFixed(2),
-        payment: 'online',
-        status: 'pending'
-      })
+    const params = new URLSearchParams({
+      ref,
+      name: name || '',
+      email: email || '',
+      checkIn: checkIn || '',
+      checkOut: checkOut || '',
+      guests: guests || '',
+      amount: '£' + (amount / 100).toFixed(2),
+      payment: 'online',
+      status: 'pending'
     });
+    await fetch(`${process.env.APPS_SCRIPT_URL}?${params.toString()}`);
 
     return {
       statusCode: 200,
