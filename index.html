@@ -1079,39 +1079,8 @@
           btn.disabled = false;
           return;
         }
-
-        // Mount Stripe payment form
-        const stripeInstance = Stripe('pk_live_51Tg9e02a7kOvFafNeo6wK7ptB8EGhTRfANSGu8VCCYYcwXItX1jojoZKD5vpBsU2zrEHNDVaDqnmBBSklJDvbho800OvZ2c06I');
-        const elements = stripeInstance.elements({ clientSecret: data.clientSecret,
-          appearance: { theme: 'night', variables: { colorPrimary: '#e07b2e', borderRadius: '10px' } }
-        });
-        const payEl = elements.create('payment');
-        payEl.mount('#paymentElement');
-        document.getElementById('payMsg').style.display = 'block';
-
-        btn.textContent = '💳 Confirm & Pay £' + (amountPence/100).toFixed(2);
-        btn.disabled = false;
-
-        // Override button to confirm payment on next click
-        btn.onclick = async () => {
-          btn.disabled = true;
-          btn.textContent = 'Processing payment...';
-          const { error } = await stripeInstance.confirmPayment({
-            elements,
-            confirmParams: { return_url: window.location.origin + '?booked=1' },
-            redirect: 'if_required'
-          });
-          if (error) {
-            showMsg('❌ ' + error.message, '#eb5757');
-            btn.textContent = '💳 Confirm & Pay £' + (amountPence/100).toFixed(2);
-            btn.disabled = false;
-          } else {
-            saveBooking({ arrival, departure, name, email, adults, paid: true, payType: 'online', ref: bookingRef, ts: Date.now() });
-            updatePitchBar();
-            document.getElementById('bookingFormWrap').innerHTML = '<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;margin-bottom:1rem;">🎉</div><h3 style="font-family:Playfair Display,serif;color:#fff;margin-bottom:0.8rem;">You\'re all booked!</h3><p style="opacity:0.8;">Thanks ' + name + '! Payment received and your pitch is confirmed. See you at Crossgate!</p></div>';
-          }
-        };
-
+window.location.href = data.url;
+        
       } catch(e) {
         showMsg('⚠️ Payment setup failed. Please call 07833 45066 to book.', 'orange');
         btn.textContent = '💳 Pay Securely Online';
