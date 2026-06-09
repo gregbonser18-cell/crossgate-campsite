@@ -717,36 +717,22 @@
             </select>
           </div>
 
-          <!-- PAYMENT TYPE TOGGLE -->
-          <div class="form-group">
-            <label>HOW WOULD YOU LIKE TO PAY?</label>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;margin-top:0.3rem;">
-              <label style="cursor:pointer;">
-                <input type="radio" name="payType" value="online" checked onchange="calcTotal()" style="display:none;"/>
-                <div class="pay-option" id="opt-online" style="border:2px solid var(--amber);border-radius:12px;padding:0.8rem;text-align:center;background:rgba(224,123,46,0.15);">
-                  <div style="font-size:1.1rem;">💳</div>
-                  <div style="font-weight:700;font-size:0.88rem;">Pay Online</div>
-                  <div style="font-size:0.75rem;opacity:0.7;">£15 / adult</div>
-                </div>
-              </label>
-              <label style="cursor:pointer;">
-                <input type="radio" name="payType" value="cash" onchange="calcTotal()" style="display:none;"/>
-                <div class="pay-option" id="opt-cash" style="border:2px solid rgba(255,255,255,0.2);border-radius:12px;padding:0.8rem;text-align:center;background:rgba(255,255,255,0.05);">
-                  <div style="font-size:1.1rem;">💵</div>
-                  <div style="font-weight:700;font-size:0.88rem;">Cash on Arrival</div>
-                  <div style="font-size:0.75rem;opacity:0.7;">£12.50 / adult</div>
-                </div>
-              </label>
+          <!-- PAYMENT ON ARRIVAL NOTICE -->
+          <div style="border:1px solid rgba(255,255,255,0.2);border-radius:12px;padding:0.9rem 1rem;margin-bottom:0.4rem;background:rgba(111,207,151,0.12);display:flex;gap:0.7rem;align-items:flex-start;">
+            <div style="font-size:1.2rem;line-height:1.2;">💷</div>
+            <div style="font-size:0.85rem;line-height:1.5;">
+              <strong>Payment is taken on arrival at the campsite (cash or card accepted).</strong><br/>
+              No payment is required online — just reserve your pitch below.
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label>ADULTS (<span id="adultRateLabel">£15</span>/night)</label>
+              <label>ADULTS (<span id="adultRateLabel">£12.50</span>/night)</label>
               <input type="number" id="adults" min="1" max="20" placeholder="2" value="1" onchange="calcTotal()"/>
             </div>
             <div class="form-group">
-              <label>YOUNG ADULTS 12–16 (<span id="youngRateLabel">£10</span>/night)</label>
+              <label>YOUNG ADULTS 12–16 (<span id="youngRateLabel">£8</span>/night)</label>
               <input type="number" id="youngAdults" min="0" max="20" placeholder="0" value="0" onchange="calcTotal()"/>
             </div>
           </div>
@@ -773,8 +759,8 @@
             </div>
           </div>
 
-          <div id="payMsg" style="display:none;font-size:0.82rem;opacity:0.7;margin-bottom:0.8rem;text-align:center;">🔒 Secure payment powered by Stripe</div>
-          <button class="btn-book-form" id="bookBtn" onclick="handleBooking()">🏕️ Check Availability & Pay</button>
+          <div id="payMsg" style="font-size:0.82rem;opacity:0.7;margin-bottom:0.8rem;text-align:center;">💷 Payment is taken on arrival — cash or card accepted.</div>
+          <button class="btn-book-form" id="bookBtn" onclick="handleBooking()">🏕️ Book My Pitch</button>
           <div id="bookingMsg" style="margin-top:0.8rem;text-align:center;font-size:0.88rem;display:none;"></div>
         </div>
         <div class="booking-info">
@@ -808,7 +794,8 @@
             </div>
           </div>
           <div class="direct-badge">
-            🎉 <strong>£12.50 cash on arrival</strong> or <strong>£15 online</strong> per adult per night. Ages 12–16: £8 cash / £10 online. Under 12s FREE. No caravans, no motorbikes.
+            🎉 <strong>£12.50 per adult per night.</strong> Ages 12–16: £8. Under 12s FREE. No caravans, no motorbikes.<br/>
+            💷 <strong>Payment is taken on arrival at the campsite (cash or card accepted).</strong>
           </div>
         </div>
       </div>
@@ -932,11 +919,9 @@
   </footer>
 
 
-  <!-- STRIPE -->
-  <script src="https://js.stripe.com/v3/"></script>
+  <!-- BOOKING LOGIC -->
   <script>
     const MAX_PITCHES = 60;
-    let paymentReady = false;
 
     function getBookings() {
       try { return JSON.parse(localStorage.getItem('crossgate_bookings') || '[]'); } catch(e) { return []; }
@@ -977,19 +962,14 @@
       const diff = (new Date(d) - new Date(a)) / 86400000;
       return diff > 0 ? diff : 0;
     }
-    function getPaymentType() {
-      const el = document.querySelector('input[name="payType"]:checked');
-      return el ? el.value : 'online';
-    }
     function calcTotal() {
       updatePitchBar();
       const nights = numNights();
       const adults = parseInt(document.getElementById('adults').value) || 0;
       const young = parseInt(document.getElementById('youngAdults').value) || 0;
       const extras = parseInt(document.getElementById('extras').value) || 0;
-      const isCash = getPaymentType() === 'cash';
-      const adultRate = isCash ? 12.50 : 15;
-      const youngRate = isCash ? 8 : 10;
+      const adultRate = 12.50;
+      const youngRate = 8;
 
       if (nights <= 0 || adults < 1) { document.getElementById('totalBox').style.display = 'none'; return 0; }
 
@@ -1003,25 +983,11 @@
         const extLabel = document.getElementById('extras').options[document.getElementById('extras').selectedIndex].text;
         lines += extLabel + ' = £' + extras.toFixed(2) + '<br/>';
       }
-      if (isCash) lines += '<span style="color:#6fcf97;font-size:0.82rem;">✅ Cash on arrival — no payment needed now</span>';
+      lines += '<span style="color:#6fcf97;font-size:0.82rem;">💷 Payment taken on arrival — cash or card accepted</span>';
 
       document.getElementById('summaryLines').innerHTML = lines;
-      document.getElementById('totalAmount').textContent = '£' + total.toFixed(2) + (isCash ? ' (pay on arrival)' : '');
+      document.getElementById('totalAmount').textContent = '£' + total.toFixed(2) + ' (pay on arrival)';
       document.getElementById('totalBox').style.display = 'block';
-
-      // Update button
-      const btn = document.getElementById('bookBtn');
-      if (isCash) {
-        btn.textContent = '📋 Reserve My Pitch (Pay Cash on Arrival)';
-        btn.style.background = 'var(--moss)';
-        document.getElementById('paymentElement').innerHTML = '';
-        document.getElementById('payMsg').style.display = 'none';
-        paymentReady = false;
-
-      } else {
-        btn.textContent = '💳 Pay Securely with Card';
-        btn.style.background = '';
-      }
 
       return Math.round(total * 100);
     }
@@ -1033,7 +999,12 @@
       const name = document.getElementById('guestName').value.trim();
       const email = document.getElementById('guestEmail').value.trim();
       const adults = parseInt(document.getElementById('adults').value) || 0;
-      const isCash = getPaymentType() === 'cash';
+      const young = parseInt(document.getElementById('youngAdults').value) || 0;
+      const children = parseInt(document.getElementById('children').value) || 0;
+      const setupType = document.getElementById('setupType').value;
+      const extrasSel = document.getElementById('extras');
+      const extrasLabel = extrasSel.options[extrasSel.selectedIndex].text;
+      const extrasVal = parseInt(extrasSel.value) || 0;
 
       if (!arrival || !departure) { showMsg('⚠️ Please select arrival and departure dates.', 'orange'); return; }
       if (numNights() <= 0) { showMsg('⚠️ Departure must be after arrival.', 'orange'); return; }
@@ -1045,47 +1016,35 @@
       if (avail <= 0) { showMsg("❌ Sorry, we're fully booked for those dates. Please try different dates.", '#eb5757'); return; }
 
       const amountPence = calcTotal();
-      if (!amountPence || amountPence < 50) { showMsg('⚠️ Could not calculate total. Please check your details.', 'orange'); return; }
-
+      const totalStr = '£' + (amountPence / 100).toFixed(2);
+      const nights = numNights();
+      const totalGuests = adults + young + children;
       const bookingRef = 'CG' + Date.now().toString().slice(-6);
 
-      // CASH ON ARRIVAL
-      if (isCash) {
-        btn.disabled = true;
-        btn.textContent = 'Reserving your pitch...';
-        saveBooking({ arrival, departure, name, email, adults, paid: false, payType: 'cash', ref: bookingRef, ts: Date.now() });
-        updatePitchBar();
-        document.getElementById('bookingFormWrap').innerHTML = '<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;margin-bottom:1rem;">🏕️</div><h3 style="font-family:Playfair Display,serif;color:#fff;margin-bottom:0.8rem;">Pitch Reserved!</h3><p style="opacity:0.8;line-height:1.7;">Thanks ' + name + '! Your pitch is held. Please bring <strong>cash on arrival</strong>. We look forward to welcoming you to Crossgate!<br/><br/>A confirmation will be sent to ' + email + '.</p></div>';
-        return;
-      }
-
-      // ONLINE PAYMENT via Stripe
+      // Reserve the pitch — payment is taken on arrival, no online payment.
       btn.disabled = true;
-      btn.textContent = 'Setting up secure payment...';
+      btn.textContent = 'Reserving your pitch...';
+      saveBooking({ arrival, departure, name, email, adults, young, children, setupType, extras: extrasLabel, total: totalStr, paid: false, payType: 'on-arrival', ref: bookingRef, ts: Date.now() });
+      updatePitchBar();
 
-      try {
-        // Call our Netlify function to create a payment intent
-        const response = await fetch('/.netlify/functions/create-payment-intent', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: amountPence, name, email })
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-          showMsg('❌ ' + data.error + ' Please call 07833 45066 to book.', '#eb5757');
-          btn.textContent = '💳 Pay Securely Online';
-          btn.disabled = false;
-          return;
-        }
-window.location.href = data.url;
-        
-      } catch(e) {
-        showMsg('⚠️ Payment setup failed. Please call 07833 45066 to book.', 'orange');
-        btn.textContent = '💳 Pay Securely Online';
-        btn.disabled = false;
-      }
+      const extrasRow = extrasVal > 0 ? '<div><strong>Extras:</strong> ' + extrasLabel + '</div>' : '';
+      document.getElementById('bookingFormWrap').innerHTML =
+        '<div style="text-align:center;padding:1.5rem 0.5rem;">' +
+          '<div style="font-size:3rem;margin-bottom:0.6rem;">🎉</div>' +
+          '<h3 style="font-family:Playfair Display,serif;color:#fff;margin-bottom:0.4rem;">Booking Confirmed!</h3>' +
+          '<p style="opacity:0.85;margin-bottom:1.2rem;">Thanks ' + name + '! Your pitch is reserved. Please keep your booking reference below — any questions, just call us on 07833 45066.</p>' +
+          '<div style="text-align:left;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:1.1rem 1.3rem;max-width:380px;margin:0 auto 1.2rem;font-size:0.9rem;line-height:1.9;">' +
+            '<div style="font-size:0.78rem;font-weight:700;opacity:0.7;letter-spacing:0.08em;margin-bottom:0.4rem;">BOOKING ' + bookingRef + '</div>' +
+            '<div><strong>Dates:</strong> ' + arrival + ' → ' + departure + ' (' + nights + ' night' + (nights>1?'s':'') + ')</div>' +
+            '<div><strong>Guests:</strong> ' + totalGuests + ' (' + adults + ' adult' + (adults>1?'s':'') + (young>0?', '+young+' aged 12–16':'') + (children>0?', '+children+' under 12':'') + ')</div>' +
+            '<div><strong>Pitch:</strong> ' + setupType + '</div>' +
+            extrasRow +
+            '<div style="border-top:1px solid rgba(255,255,255,0.15);margin-top:0.5rem;padding-top:0.5rem;"><strong>Total:</strong> <span style="color:var(--amber-light);font-weight:700;">' + totalStr + '</span></div>' +
+          '</div>' +
+          '<div style="background:rgba(111,207,151,0.15);border-radius:12px;padding:0.9rem 1rem;max-width:380px;margin:0 auto;font-size:0.88rem;line-height:1.5;">' +
+            '💷 <strong>No payment is required online. Payment will be taken on arrival</strong> at the campsite (cash or card accepted).' +
+          '</div>' +
+        '</div>';
     }
 
         function showMsg(text, color) {
@@ -1098,19 +1057,6 @@ window.location.href = data.url;
       document.getElementById('arrivalDate').min = today;
       document.getElementById('departureDate').min = today;
       updatePitchBar();
-      // Check if returning from Square payment
-      const pending = sessionStorage.getItem('pendingBooking');
-      if (pending) {
-        try {
-          const b = JSON.parse(pending);
-          // Mark as paid
-          const all = getBookings();
-          const idx = all.findIndex(bk => bk.ref === b.ref);
-          if (idx !== -1) { all[idx].paid = true; localStorage.setItem('crossgate_bookings', JSON.stringify(all)); }
-          sessionStorage.removeItem('pendingBooking');
-          document.getElementById('bookingFormWrap').innerHTML = '<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;margin-bottom:1rem;">🎉</div><h3 style="font-family:Playfair Display,serif;color:#fff;margin-bottom:0.8rem;">You\'re all booked!</h3><p style="opacity:0.8;">Thanks ' + b.name + '! Your payment has been taken and your pitch is confirmed. We can\'t wait to welcome you to Crossgate!</p></div>';
-        } catch(e) {}
-      }
     });
   </script>
 
@@ -1139,31 +1085,15 @@ window.location.href = data.url;
         statBox('Pitches In Use Tonight', pitchesToday + ' / 60') +
         statBox('Upcoming Bookings', upcoming.length);
 
-      let rows = '<tr style="border-bottom:1px solid rgba(255,255,255,0.1);opacity:0.5;font-size:0.78rem;"><th style="text-align:left;padding:0.5rem;">NAME</th><th>EMAIL</th><th>ARRIVAL</th><th>DEPARTURE</th><th>ADULTS</th><th>PAID</th></tr>';
+      let rows = '<tr style="border-bottom:1px solid rgba(255,255,255,0.1);opacity:0.5;font-size:0.78rem;"><th style="text-align:left;padding:0.5rem;">NAME</th><th>EMAIL</th><th>ARRIVAL</th><th>DEPARTURE</th><th>ADULTS</th><th>PAYMENT</th></tr>';
       bookings.slice().reverse().forEach(b => {
-        rows += "<tr style='border-bottom:1px solid rgba(255,255,255,0.06);'><td style='padding:0.6rem 0.4rem;'>" + b.name + "</td><td>" + b.email + "</td><td>" + b.arrival + "</td><td>" + b.departure + "</td><td style='text-align:center'>" + b.adults + "</td><td style='text-align:center'>" + (b.paid ? '✅' : '⏳') + "</td></tr>";
+        rows += "<tr style='border-bottom:1px solid rgba(255,255,255,0.06);'><td style='padding:0.6rem 0.4rem;'>" + b.name + "</td><td>" + b.email + "</td><td>" + b.arrival + "</td><td>" + b.departure + "</td><td style='text-align:center'>" + b.adults + "</td><td style='text-align:center'>" + (b.paid ? '✅ Paid' : '💷 On arrival') + "</td></tr>";
       });
       document.getElementById('adminTable').innerHTML = rows;
     }
     function statBox(label, val) {
       return "<div style='background:rgba(255,255,255,0.06);border-radius:12px;padding:1rem;text-align:center;'><div style='font-size:1.6rem;font-weight:700;color:#f4a451;'>" + val + "</div><div style='font-size:0.78rem;opacity:0.6;margin-top:0.3rem;text-transform:uppercase;letter-spacing:0.05em;'>" + label + "</div></div>";
     }
-  </script>
-
-
-  <script>
-    // Highlight selected pay option
-    document.addEventListener('change', function(e) {
-      if (e.target.name === 'payType') {
-        const isCash = e.target.value === 'cash';
-        document.getElementById('opt-online').style.border = isCash ? '2px solid rgba(255,255,255,0.2)' : '2px solid var(--amber)';
-        document.getElementById('opt-online').style.background = isCash ? 'rgba(255,255,255,0.05)' : 'rgba(224,123,46,0.15)';
-        document.getElementById('opt-cash').style.border = isCash ? '2px solid #6fcf97' : '2px solid rgba(255,255,255,0.2)';
-        document.getElementById('opt-cash').style.background = isCash ? 'rgba(111,207,151,0.15)' : 'rgba(255,255,255,0.05)';
-        if (document.getElementById('adultRateLabel')) document.getElementById('adultRateLabel').textContent = isCash ? '£12.50' : '£15';
-        if (document.getElementById('youngRateLabel')) document.getElementById('youngRateLabel').textContent = isCash ? '£8' : '£10';
-      }
-    });
   </script>
 </body>
 </html>
