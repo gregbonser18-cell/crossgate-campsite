@@ -4,7 +4,6 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-
   try {
     const { amount, guests, checkIn, checkOut, name, email } = JSON.parse(event.body);
 
@@ -26,6 +25,24 @@ exports.handler = async (event) => {
       metadata: { name, email, checkIn, checkOut, guests },
       success_url: `${process.env.URL}/booking-confirmed.html`,
       cancel_url: `${process.env.URL}/#booking`,
+    });
+
+    // Write booking to Google Sheet
+    const ref = 'CG-' + Date.now();
+    await fetch(process.env.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ref,
+        name,
+        email,
+        checkIn,
+        checkOut,
+        guests,
+        amount: '£' + (amount / 100).toFixed(2),
+        payment: 'online',
+        status: 'pending'
+      })
     });
 
     return {
