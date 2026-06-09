@@ -306,7 +306,8 @@
     .form-group { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1rem; }
     .form-group label { font-size: 0.82rem; font-weight: 700; opacity: 0.8; letter-spacing: 0.04em; }
     .form-group input,
-    .form-group select {
+    .form-group select,
+    .form-group textarea {
       background: rgba(255,255,255,0.1);
       border: 1px solid rgba(255,255,255,0.2);
       color: #fff; border-radius: 10px;
@@ -314,11 +315,14 @@
       font-family: 'Nunito', sans-serif;
       transition: border-color 0.2s;
     }
+    .form-group textarea { resize: vertical; min-height: 120px; }
     .form-group input:focus,
-    .form-group select:focus {
+    .form-group select:focus,
+    .form-group textarea:focus {
       outline: none; border-color: var(--amber-light);
     }
     .form-group input::placeholder { opacity: 0.5; }
+    .form-group textarea::placeholder { opacity: 0.5; }
     .form-group select option { background: var(--forest-dark); }
     .btn-book-form {
       width: 100%; background: var(--amber);
@@ -482,6 +486,7 @@
       <li><a href="#pitches">Pitches</a></li>
       <li><a href="#gallery">Gallery</a></li>
       <li><a href="#location">Find Us</a></li>
+      <li><a href="#contact">Contact</a></li>
     </ul>
     <a href="#booking" class="nav-book">📅 Book Direct</a>
   </nav>
@@ -901,6 +906,76 @@
     </div>
   </section>
 
+  <!-- CONTACT -->
+  <section id="contact" class="booking">
+    <div class="container">
+      <span class="section-tag" style="color:var(--amber-light)">Get in Touch</span>
+      <h2>Questions? Drop Us a Line</h2>
+      <p class="lead">Not ready to book, or got a question about your stay? Send us a message and we'll get back to you as soon as we can.</p>
+      <div class="booking-grid">
+        <div class="booking-form">
+          <form id="contactForm" action="https://formspree.io/f/xdavdopl" method="POST">
+            <!-- Subject line for the email Formspree sends to you -->
+            <input type="hidden" name="_subject" value="New enquiry from Crossgate Campsite website" />
+            <!-- Honeypot spam filter — bots fill this, humans never see it -->
+            <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;" aria-hidden="true" />
+
+            <div class="form-group">
+              <label for="contactName">YOUR NAME</label>
+              <input type="text" id="contactName" name="name" placeholder="e.g. Sarah Thompson" required />
+            </div>
+            <div class="form-group">
+              <label for="contactEmail">EMAIL ADDRESS</label>
+              <input type="email" id="contactEmail" name="email" placeholder="you@example.com" required />
+            </div>
+            <div class="form-group">
+              <label for="contactPhone">PHONE (OPTIONAL)</label>
+              <input type="tel" id="contactPhone" name="phone" placeholder="07000 000000" />
+            </div>
+            <div class="form-group">
+              <label for="contactMessage">YOUR MESSAGE</label>
+              <textarea id="contactMessage" name="message" rows="5" placeholder="Tell us what you'd like to know…" required></textarea>
+            </div>
+
+            <button type="submit" class="btn-book-form" id="contactBtn">✉️ Send Message</button>
+            <div id="contactMsg" style="margin-top:0.8rem;text-align:center;font-size:0.88rem;display:none;"></div>
+          </form>
+        </div>
+        <div class="booking-info">
+          <h3>Prefer to Reach Us Directly?</h3>
+          <div class="info-item">
+            <div class="info-icon">📞</div>
+            <div class="info-text">
+              <h4>Call or Text</h4>
+              <p>We're happy to chat through your plans — <a href="tel:07833450660" style="color:var(--amber-light);">07833 45066</a>.</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">✉️</div>
+            <div class="info-text">
+              <h4>Email</h4>
+              <p>Drop us a line at <a href="mailto:deb.cooper123@aol.com" style="color:var(--amber-light);">deb.cooper123@aol.com</a> and we'll reply within a few hours.</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">📍</div>
+            <div class="info-text">
+              <h4>Find the Farm</h4>
+              <p>Tintwistle, SK13 1HP — right on the edge of the Peak District's Longdendale Valley.</p>
+            </div>
+          </div>
+          <div class="info-item">
+            <div class="info-icon">⏱️</div>
+            <div class="info-text">
+              <h4>Quick Replies</h4>
+              <p>We read every message ourselves — no call centres, no bots. Just the family who runs the site.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer>
     <div class="footer-grid">
@@ -915,6 +990,7 @@
         <a href="#gallery">Gallery</a>
         <a href="#booking">Book Direct</a>
         <a href="#location">Find Us</a>
+        <a href="#contact">Contact</a>
       </div>
       <div class="footer-col">
         <h4>Contact</h4>
@@ -1053,7 +1129,22 @@
       if (isCash) {
         btn.disabled = true;
         btn.textContent = 'Reserving your pitch...';
+        const young = parseInt(document.getElementById('youngAdults').value) || 0;
+        const nights = numNights();
         saveBooking({ arrival, departure, name, email, adults, paid: false, payType: 'cash', ref: bookingRef, ts: Date.now() });
+        // Record the reservation in the Google Sheet (non-blocking).
+        fetch('/.netlify/functions/record-booking', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ref: bookingRef,
+            name, email,
+            arrival, departure,
+            nights,
+            adults, youngAdults: young,
+            amount: '£' + (amountPence / 100).toFixed(2)
+          })
+        }).catch(function () {});
         updatePitchBar();
         document.getElementById('bookingFormWrap').innerHTML = '<div style="text-align:center;padding:2rem;"><div style="font-size:3rem;margin-bottom:1rem;">🏕️</div><h3 style="font-family:Playfair Display,serif;color:#fff;margin-bottom:0.8rem;">Pitch Reserved!</h3><p style="opacity:0.8;line-height:1.7;">Thanks ' + name + '! Your pitch is held. Please bring <strong>cash on arrival</strong>. We look forward to welcoming you to Crossgate!<br/><br/>A confirmation will be sent to ' + email + '.</p></div>';
         return;
@@ -1065,10 +1156,18 @@
 
       try {
         // Call our Netlify function to create a payment intent
+        const young = parseInt(document.getElementById('youngAdults').value) || 0;
         const response = await fetch('/.netlify/functions/create-payment-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ amount: amountPence, name, email })
+          body: JSON.stringify({
+            amount: amountPence,
+            name, email,
+            arrival, departure,
+            nights: numNights(),
+            adults, youngAdults: young,
+            ref: bookingRef
+          })
         });
 
         const data = await response.json();
@@ -1164,6 +1263,56 @@ window.location.href = data.url;
         if (document.getElementById('youngRateLabel')) document.getElementById('youngRateLabel').textContent = isCash ? '£8' : '£10';
       }
     });
+  </script>
+
+  <!-- CONTACT FORM (Formspree AJAX) -->
+  <script>
+    (function () {
+      var form = document.getElementById('contactForm');
+      if (!form) return;
+      var btn = document.getElementById('contactBtn');
+      var msg = document.getElementById('contactMsg');
+
+      function showMsg(text, color) {
+        msg.textContent = text;
+        msg.style.color = color;
+        msg.style.display = 'block';
+      }
+
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+        showMsg('', '#fff');
+        msg.style.display = 'none';
+
+        fetch(form.action, {
+          method: 'POST',
+          body: new FormData(form),
+          headers: { 'Accept': 'application/json' }
+        })
+        .then(function (res) {
+          if (res.ok) {
+            form.reset();
+            showMsg('✅ Thanks — your message is on its way. We\'ll be in touch soon!', '#6fcf97');
+          } else {
+            return res.json().then(function (data) {
+              var detail = data && data.errors && data.errors.length
+                ? data.errors.map(function (er) { return er.message; }).join(', ')
+                : 'Something went wrong. Please try again or email us directly.';
+              showMsg('⚠️ ' + detail, 'var(--amber-light)');
+            });
+          }
+        })
+        .catch(function () {
+          showMsg('⚠️ Network error — please check your connection or email us directly.', 'var(--amber-light)');
+        })
+        .finally(function () {
+          btn.disabled = false;
+          btn.textContent = '✉️ Send Message';
+        });
+      });
+    })();
   </script>
 </body>
 </html>
